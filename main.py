@@ -8,8 +8,29 @@ app.config['JWT_SECRET_KEY'] = config['SECURITY']['JWT_SECRET_KEY']
 jwt = JWTManager(app)
 
 # Microservices endpoints
-AUTH_API_URL = 'http://localhost:5002/login_api/customers'
+AUTH_API_URL = 'http://localhost:5002/auth_api/login'
 CUSTOMER_API_URL = 'http://localhost:5001/customer_api/customers'
+
+
+@app.route('/login', methods=['POST'])
+def login():
+
+    try:
+        username = request.json.get('username', None)
+        password = request.json.get('password', None)
+
+        if not username or not password:
+            abort(400)
+
+        response = requests.post(f'{AUTH_API_URL}', json={'username': username, 'password': password})
+
+        if response.status_code == 200:
+            access_token = create_access_token(identity=username)
+            return jsonify({'access_token': access_token})
+        else:
+            abort(401)
+    except:
+        return jsonify({'message': 'Invalid username/password'}), 400
 
 
 @app.route('/customers/<path:path>', methods=['GET'])
